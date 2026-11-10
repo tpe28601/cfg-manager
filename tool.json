@@ -1,0 +1,15 @@
+{
+  "$schema": "../Dev-Toolbox/spec/tool.schema.json",
+  "specVersion": 1,
+  "kind": "tool",
+  "id": "agents-cfg-manager",
+  "name": "Agents Cfg Manager",
+  "version": "1.2.0",
+  "description": "AI agent 設定檔打包／部署（opencode.json、AGENTS.md、Ai-Data、.opencode）",
+  "runtime": { "kind": "powershell", "min": "5.1" },
+  "web": { "entry": "Agents-Cfg-Manager-Web.ps1", "defaultPort": 8712, "health": "/api/health" },
+  "cli": { "entry": "Agents-Cfg-Manager.ps1", "menu": true, "json": false },
+  "requires": [],
+  "dataDir": "%LOCALAPPDATA%/DevToolbox/agents-cfg-manager",
+  "uiKit": "3.2.0"
+}

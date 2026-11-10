@@ -1,0 +1,145 @@
+/* Agents Cfg Manager — 建立在 ui-kit 3.0 token 上（深淺色、強調色由 tb-theme.js 控制）。
+   短名稱只是 --tb-* 的別名，沿用既有 class，不需要改 app.js。 */
+:root {
+  --bg: var(--tb-bg);
+  --panel: var(--tb-surface);
+  --panel2: var(--tb-surface-2);
+  --line: var(--tb-border);
+  --fg: var(--tb-text);
+  --dim: var(--tb-muted);
+  --accent: var(--tb-accent);
+  --ok: var(--tb-ok);
+  --warn: var(--tb-warn);
+  --danger: var(--tb-danger);
+  --mono: var(--tb-mono);
+}
+* { box-sizing: border-box; }
+body { margin: 0; }
+
+/* ---- 頂部列 ---- */
+.tool-header { position: sticky; top: 0; z-index: 10; }
+.tool-topbar, .tool-tabs {
+  padding-inline: 18px;
+  background: var(--tb-surface);
+  border-bottom: 1px solid var(--tb-border);
+}
+.tool-topbar {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
+  padding-block: 10px; flex: none;
+}
+.tool-topbar__brand {
+  display: inline-flex; align-items: center; gap: 10px;
+  font-size: var(--tb-fs-lg); font-weight: 650;
+}
+.tool-topbar__controls { margin-inline-start: auto; }
+.tool-topbar__port { color: var(--tb-muted); font-size: var(--tb-fs-xs); white-space: nowrap; }
+.tool-tabs { gap: 6px; margin-bottom: 0; padding-block: 8px; }
+@media (max-width: 560px) {
+  .tool-topbar, .tool-tabs { padding-inline: 10px; }
+}
+
+/* Wide screens: fill the viewport; the old 1180px cap left empty side gutters */
+main { width: 100%; padding: 18px clamp(20px, 3vw, 48px) 60px; }
+.page { display: none; }
+.page.active { display: block; animation: tb-fade .15s ease; }
+
+/* ---- 卡片 ---- */
+.card {
+  background: var(--tb-surface); border: 1px solid var(--tb-border); border-radius: var(--tb-radius-xl);
+  padding: 16px 18px; margin-bottom: 16px; box-shadow: var(--tb-shadow-sm);
+  transition: border-color var(--tb-transition), box-shadow var(--tb-transition);
+}
+.card:hover { border-color: var(--tb-border-strong); box-shadow: var(--tb-shadow); }
+.card h2 { margin: 0 0 12px; font-size: var(--tb-fs-lg); font-weight: 650; color: var(--tb-text); }
+
+.row { display: flex; align-items: center; gap: 8px; margin: 10px 0; flex-wrap: wrap; }
+.row.inline { flex-wrap: nowrap; }
+.row label { color: var(--tb-muted); white-space: nowrap; font-size: var(--tb-fs-sm); font-weight: 500; }
+.row .lbl2 { color: var(--tb-muted); white-space: nowrap; font-size: var(--tb-fs-sm); display: inline-flex; align-items: center; gap: 5px; }
+.chk { display: inline-flex; align-items: center; gap: 6px; color: var(--tb-text); cursor: pointer; }
+input[type="checkbox"], input[type="radio"] { accent-color: var(--tb-accent); width: 16px; height: 16px; }
+
+/* ---- 輸入 ---- */
+input[type="text"], select {
+  min-height: var(--tb-control-h); background: var(--tb-surface); color: var(--tb-text);
+  border: 1px solid var(--tb-border-strong); border-radius: var(--tb-radius);
+  padding: 0 10px; font: inherit; transition: border-color var(--tb-transition), box-shadow var(--tb-transition);
+}
+input[type="text"] { font-family: var(--tb-mono); font-size: var(--tb-fs-sm); flex: 1; min-width: 120px; }
+input[type="text"]:hover, select:hover { border-color: color-mix(in srgb, var(--tb-accent) 55%, var(--tb-border-strong)); }
+input[type="text"]:focus, select:focus { outline: none; border-color: var(--tb-accent); box-shadow: var(--tb-focus); }
+input.small { flex: 0 0 190px; }
+select { max-width: 100%; }
+
+/* ---- 按鈕：滑過有框＋淡色光暈 ---- */
+button:where(:not(.tool-header button)) {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  min-height: var(--tb-control-h); padding: 0 14px; white-space: nowrap;
+  background: var(--tb-surface); color: var(--tb-text); border: 1px solid var(--tb-border-strong);
+  border-radius: var(--tb-radius); font: inherit; font-weight: 500; cursor: pointer; box-shadow: var(--tb-shadow-sm);
+  transition: background var(--tb-transition), border-color var(--tb-transition), box-shadow var(--tb-transition), transform var(--tb-transition);
+}
+button:hover { border-color: var(--tb-accent); box-shadow: 0 0 0 3px var(--tb-accent-soft); }
+button:active { transform: translateY(1px); }
+button:focus-visible { outline: none; box-shadow: var(--tb-focus); }
+button:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
+button.primary { background: var(--tb-accent); border-color: var(--tb-accent); color: var(--tb-accent-fg); font-weight: 600; }
+button.primary:hover { background: color-mix(in srgb, var(--tb-accent) 88%, var(--tb-text)); box-shadow: 0 0 0 3px var(--tb-accent-ring); }
+button.ghost { background: transparent; border-color: var(--tb-border); box-shadow: none; }
+button.ghost:hover { background: var(--tb-surface-2); border-color: var(--tb-accent); }
+button.danger { background: transparent; border-color: color-mix(in srgb, var(--tb-danger) 60%, var(--tb-border)); color: var(--tb-danger); box-shadow: none; }
+button.danger:hover { background: var(--tb-danger-soft); border-color: var(--tb-danger); box-shadow: 0 0 0 3px var(--tb-danger-soft); }
+button.tiny { min-height: 26px; padding: 0 8px; font-size: var(--tb-fs-xs); }
+button.icon { width: 34px; min-height: 34px; padding: 0; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* 圖標滑過動畫（data-anim 由 ui-kit 定義；這裡把一般 button 也當成動畫宿主） */
+button:hover .tb-icon[data-anim="spin"] { animation: tb-spin .7s ease; }
+button:hover .tb-icon[data-anim="bounce"] { animation: tb-bounce .5s ease; }
+button:hover .tb-icon[data-anim="wiggle"] { animation: tb-wiggle .5s ease; }
+button:hover .tb-icon[data-anim="pop"] { animation: tb-popicon .35s ease; }
+button:hover .tb-icon[data-anim="nudge"] { animation: tb-nudge .45s ease; }
+
+/* ---- 表格 ---- */
+table.grid { width: 100%; border-collapse: collapse; margin-top: 8px; }
+table.grid th {
+  text-align: left; color: var(--tb-muted); font-weight: 600; font-size: var(--tb-fs-xs);
+  border-bottom: 1px solid var(--tb-border); padding: 6px 8px;
+}
+table.grid td { border-bottom: 1px solid var(--tb-border); padding: 5px 8px; vertical-align: middle; }
+table.grid tbody tr { transition: background var(--tb-transition); }
+table.grid tbody tr:hover > td { background: var(--tb-surface-2); }
+table.grid tr.off td { opacity: 0.45; }
+table.grid td input[type="text"] { border-color: transparent; background: transparent; min-height: 30px; padding: 0 6px; }
+table.grid td input[type="text"]:hover { border-color: var(--tb-border); }
+table.grid td input[type="text"]:focus { background: var(--tb-surface); border-color: var(--tb-accent); }
+.card { overflow-x: auto; }
+
+/* ---- 輸出區 ---- */
+.out {
+  background: var(--tb-surface-2); border: 1px solid var(--tb-border); border-radius: var(--tb-radius-lg);
+  padding: 12px 14px; margin-top: 12px; font-family: var(--tb-mono); font-size: 12.5px; color: var(--tb-text);
+  white-space: pre-wrap; word-break: break-all; max-height: 420px; overflow: auto;
+}
+.hint { color: var(--tb-muted); font-size: var(--tb-fs-sm); }
+
+/* ---- 瀏覽對話框已改用 ui-kit tb-dirpicker（.tb-dp-* 樣式在 ui-kit.css） ---- */
+
+/* ---- 提示（與 ui-kit tb-toast 同外觀） ---- */
+.toast {
+  position: fixed; right: 16px; bottom: 16px; z-index: 200; max-width: min(420px, calc(100vw - 32px));
+  background: var(--tb-surface); color: var(--tb-text); border: 1px solid var(--tb-border); border-left: 4px solid var(--tb-ok);
+  padding: 10px 16px; border-radius: var(--tb-radius); box-shadow: var(--tb-shadow); animation: tb-slide .18s ease;
+}
+.toast.err { border-left-color: var(--tb-danger); }
+
+/* ---- 窄視窗：所有列改成可換行，右側按鈕不會被切掉 ---- */
+@media (max-width: 760px) {
+  main { padding: 12px 12px 48px; }
+  .row.inline { flex-wrap: wrap; }
+  input.small { flex: 1 1 160px; }
+  .row label { white-space: normal; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .page.active, .modal, .modal-box, .toast { animation: none; }
+}

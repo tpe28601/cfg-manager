@@ -1,0 +1,26 @@
+# 使用者資料一律放 %LOCALAPPDATA%\DevToolbox（TOOL-SPEC 第 6 節），這裡只防舊檔誤入 git
+profiles/
+history.jsonl
+job-history.jsonl
+packs/
+backups/
+*.log
+*.tmp
+
+# 打包產物（走 GitHub Release，不进 git）
+dist/
+build/
+*.exe
+
+# 本機 gitleaks 例外（可能含真實路徑，僅留樣板檔在 repo）
+.gitleaks.local.toml
+
+# 編輯器／系統
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
+# Python 快取／虛擬環境
+__pycache__/
+*.pyc
+.venv/

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f3f5f9">
+<title>Agents Cfg Manager</title>
+<link rel="stylesheet" href="/ui-kit.css">
+<link rel="stylesheet" href="/style.css">
+<!-- 深淺色／強調色：網址 ?theme=&accent=（Hub 嵌入時帶入）> 本機記憶 > 跟隨系統；?embedded=1 隱藏工具標題列 -->
+<script src="/tb-theme.js"></script>
+</head>
+<body class="tb-app">
+<div class="tool-header">
+  <header class="tool-topbar tb-hide-embedded">
+    <div class="tool-topbar__brand"><span class="tb-card__icon"><i data-tb-icon="package" data-size="17"></i></span>Agents Cfg Manager</div>
+    <div class="tb-row tb-row--end tool-topbar__controls">
+      <span id="server-port" class="tool-topbar__port">本機服務 port —</span>
+      <span id="server-state" class="tb-badge" role="status">連線中…</span>
+      <button id="theme-toggle" class="tb-btn tb-btn--icon" type="button" aria-label="切換主題"><i data-tb-icon="sun"></i></button>
+    </div>
+  </header>
+  <nav id="tabs" class="tb-tabs tool-tabs" aria-label="Agents Cfg Manager 分頁">
+    <button class="tb-tab is-active" data-tab="pack"><i data-tb-icon="package" data-anim="bounce"></i><span>打包</span></button>
+    <button class="tb-tab" data-tab="unpack"><i data-tb-icon="folder-open" data-anim="pop"></i><span>解壓還原</span></button>
+    <button class="tb-tab" data-tab="copy"><i data-tb-icon="copy" data-anim="nudge"></i><span>部署複製</span></button>
+    <button class="tb-tab" data-tab="profiles"><i data-tb-icon="bookmark" data-anim="pop"></i><span>設定檔</span></button>
+    <button class="tb-tab" data-tab="history"><i data-tb-icon="history" data-anim="spin"></i><span>歷史</span></button>
+  </nav>
+</div>
+
+<main>
+  <!-- ================= 打包 ================= -->
+  <section id="page-pack" class="page active">
+    <div class="card">
+      <h2>打包來源與範圍</h2>
+      <div class="row">
+        <label>來源根目錄</label>
+        <input id="pack-src" type="text" spellcheck="false">
+        <button class="ghost" id="pack-src-browse"><i data-tb-icon="folder" data-anim="bounce"></i>瀏覽…</button>
+        <select id="pack-preset">
+          <option value="">載入內建範圍…</option>
+          <option value="project">專案（opencode.json / AGENTS.md / Ai-Data / .opencode）</option>
+          <option value="global">全域（~\.config\opencode）</option>
+          <option value="all">全部（專案＋全域，自訂 base）</option>
+        </select>
+      </div>
+      <div class="row">
+        <label>工作範圍（項目式，可自訂增刪）</label>
+        <button class="ghost" id="scope-preview"><i data-tb-icon="eye" data-anim="pop"></i>預覽檔案清單</button>
+      </div>
+      <table class="grid" id="scope-table">
+        <thead><tr><th style="width:3em">用</th><th>項目（相對路徑，可用 * ?）</th><th style="width:22%">排除樣式（逗號分隔）</th><th style="width:4em"></th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <div class="row inline">
+        <input id="new-item-path" type="text" placeholder="新增項目，例：README.md、skills、Ai-Data\kb\*.md">
+        <input id="new-item-exclude" type="text" placeholder="排除樣式（可留空）" class="small">
+        <button id="scope-add"><i data-tb-icon="plus" data-anim="pop"></i>新增</button>
+        <label class="chk"><input type="checkbox" id="pack-auth"> 一併收錄 auth.json</label>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>輸出</h2>
+      <div class="row">
+        <label>輸出資料夾</label>
+        <input id="pack-zipdir" type="text" spellcheck="false">
+        <button class="ghost" id="pack-zipdir-browse"><i data-tb-icon="folder" data-anim="bounce"></i>瀏覽…</button>
+        <label class="lbl2">檔名樣式</label>
+        <input id="pack-namepat" type="text" value="agents-cfg_&lt;ts&gt;_&lt;label&gt;.zip" class="small">
+      </div>
+      <div class="row inline">
+        <button id="pack-dry" class="ghost"><i data-tb-icon="eye" data-anim="pop"></i>預覽（Dry-Run）</button>
+        <button id="pack-run" class="primary"><i data-tb-icon="play" data-anim="nudge"></i>執行打包</button>
+        <button id="pack-save" class="ghost"><i data-tb-icon="save" data-anim="bounce"></i>儲存目前條件為設定檔…</button>
+      </div>
+      <pre id="pack-out" class="out" hidden></pre>
+    </div>
+  </section>
+
+  <!-- ================= 解壓 ================= -->
+  <section id="page-unpack" class="page">
+    <div class="card">
+      <h2>壓縮包</h2>
+      <div class="row">
+        <input id="unp-zip" type="text" placeholder="zip 完整路徑" spellcheck="false">
+        <button class="ghost" id="unp-zip-browse"><i data-tb-icon="folder" data-anim="bounce"></i>瀏覽…</button>
+        <button id="unp-load"><i data-tb-icon="search" data-anim="pop"></i>載入資訊</button>
+      </div>
+      <div id="unp-info" class="out" hidden></div>
+    </div>
+    <div class="card">
+      <h2>還原目標</h2>
+      <div class="row">
+        <label>目標根目錄</label>
+        <input id="unp-tgt" type="text" spellcheck="false">
+        <button class="ghost" id="unp-tgt-browse"><i data-tb-icon="folder" data-anim="bounce"></i>瀏覽…</button>
+        <label class="chk"><input type="checkbox" id="unp-nobackup"> 不備份直接覆蓋</label>
+      </div>
+      <div class="row inline">
+        <button id="unp-dry" class="ghost"><i data-tb-icon="eye" data-anim="pop"></i>預覽（Dry-Run）</button>
+        <button id="unp-run" class="primary"><i data-tb-icon="play" data-anim="nudge"></i>執行解壓</button>
+        <label class="lbl2"><input type="radio" name="unp-mode" value="self" checked> 還原到壓縮包原本位置</label>
+        <label class="lbl2"><input type="radio" name="unp-mode" value="custom"> 自訂目標</label>
+      </div>
+      <pre id="unp-out" class="out" hidden></pre>
+    </div>
+  </section>
+
+  <!-- ================= 部署複製 ================= -->
+  <section id="page-copy" class="page">
+    <div class="card">
+      <h2>部署複製（目錄 → 目錄，只新增／覆蓋，不刪除）</h2>
+      <div class="row">
+        <label>來源根目錄</label>
+        <input id="cpy-src" type="text" spellcheck="false">
+        <button class="ghost" id="cpy-src-browse"><i data-tb-icon="folder" data-anim="bounce"></i>瀏覽…</button>
+      </div>
+      <div class="row">
+        <label>目標根目錄</label>
+        <input id="cpy-tgt" type="text" placeholder="新規畫 repo 根目錄" spellcheck="false">
+        <button class="ghost" id="cpy-tgt-browse"><i data-tb-icon="folder" data-anim="bounce"></i>瀏覽…</button>
+        <label class="chk"><input type="checkbox" id="cpy-nobackup"> 不備份直接覆蓋</label>
+      </div>
+      <p class="hint">使用「打包」頁目前的工作範圍項目清單。</p>
+      <div class="row inline">
+        <button id="cpy-dry" class="ghost"><i data-tb-icon="eye" data-anim="pop"></i>預覽（Dry-Run）</button>
+        <button id="cpy-run" class="primary"><i data-tb-icon="play" data-anim="nudge"></i>執行複製</button>
+      </div>
+      <pre id="cpy-out" class="out" hidden></pre>
+    </div>
+  </section>
+
+  <!-- ================= 設定檔 ================= -->
+  <section id="page-profiles" class="page">
+    <div class="card">
+      <h2>已儲存的設定檔（profiles\*.json）</h2>
+      <div class="row inline">
+        <button id="pf-refresh" class="ghost"><i data-tb-icon="refresh-cw" data-anim="spin"></i>重新整理</button>
+        <button id="pf-save" class="ghost"><i data-tb-icon="save" data-anim="bounce"></i>將目前打包頁條件存成新設定檔…</button>
+      </div>
+      <table class="grid" id="pf-table">
+        <thead><tr><th>名稱</th><th style="width:16%">更新時間</th><th>來源根目錄</th><th style="width:12%">範圍</th><th style="width:14em"></th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ================= 歷史 ================= -->
+  <section id="page-history" class="page">
+    <div class="card">
+      <h2>工作歷史（最近 100 筆）</h2>
+      <div class="row inline">
+        <button id="his-refresh" class="ghost"><i data-tb-icon="refresh-cw" data-anim="spin"></i>重新整理</button>
+        <button id="his-clear" class="danger"><i data-tb-icon="trash-2" data-anim="wiggle"></i>清空</button>
+      </div>
+      <table class="grid" id="his-table">
+        <thead><tr><th style="width:15%">時間</th><th>動作</th><th>明細</th><th style="width:6em">檔數</th><th style="width:8em">大小</th><th>來源 → 目標</th><th style="width:10em"></th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<!-- 資料夾挑選改用 ui-kit tb-dirpicker.js 共用元件（DOM 由元件動態產生） -->
+
+<div id="toast" class="toast" hidden></div>
+<script src="/tb-icons.js"></script>
+<script src="/tb-dirpicker.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>
