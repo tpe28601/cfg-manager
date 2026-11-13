@@ -4,7 +4,7 @@
   "kind": "tool",
   "id": "agents-cfg-manager",
   "name": "Agents Cfg Manager",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "AI agent 設定檔打包／部署（opencode.json、AGENTS.md、Ai-Data、.opencode）",
   "runtime": { "kind": "powershell", "min": "5.1" },
   "web": { "entry": "Agents-Cfg-Manager-Web.ps1", "defaultPort": 8712, "health": "/api/health" },
