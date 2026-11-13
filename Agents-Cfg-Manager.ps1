@@ -288,6 +288,7 @@ function Show-Menu {
     Write-Host '  5. 自訂範圍 / 設定檔編輯'
     Write-Host '  6. 設定檔管理'
     Write-Host '  7. 工作歷史'
+    Write-Host '  8. 檢查更新'
     Write-Host '  0. 離開'
 }
 
@@ -412,6 +413,7 @@ while ($true) {
             '5' { Invoke-ScopeEditor }
             '6' { Invoke-ProfileFlow }
             '7' { Invoke-HistoryFlow }
+            '8' { & (Join-Path $PSScriptRoot 'Standalone-Update.ps1') -Action Open }
             '0' { return }
         }
     } catch {

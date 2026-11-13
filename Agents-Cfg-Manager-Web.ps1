@@ -206,6 +206,23 @@ function Invoke-OcfRoute {
 
     # ---- API ----
     switch ("$method $path") {
+        'POST /api/standalone-update' {
+            if ($ParentPid -gt 0) { Send-OcfError $Ctx 403 '請從 Hub 更新工具。' 'MANAGED_BY_HUB'; return }
+            $body = Read-OcfBody $Ctx
+            $updater = Join-Path $PSScriptRoot 'Standalone-Update.ps1'
+            if ($body.action -eq 'check') {
+                $result = & $updater -Action Check | ConvertFrom-Json
+                Send-OcfJson $Ctx 200 $result
+                return
+            }
+            if ($body.action -ne 'open' -or [string]$body.version -notmatch '^[0-9]+\.[0-9]+\.[0-9]+$') {
+                Send-OcfError $Ctx 400 '更新請求格式不正確。' 'BAD_ARGS'
+                return
+            }
+            & $updater -Action Open -Version $body.version
+            Send-OcfJson $Ctx 200 @{ ok = $true }
+            return
+        }
         'GET /api/health' {
             Send-OcfJson $Ctx 200 ([ordered]@{
                 ok = $true; id = 'agents-cfg-manager'; version = $script:OcfToolVersion
