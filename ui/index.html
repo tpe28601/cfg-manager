@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="/ui-kit.css">
 <link rel="stylesheet" href="/style.css">
 <!-- 深淺色／強調色：網址 ?theme=&accent=（Hub 嵌入時帶入）> 本機記憶 > 跟隨系統；?embedded=1 隱藏工具標題列 -->
-<script src="/tb-theme.js"></script>
+<script src="/tb-theme.js" data-tb-tool></script>
 </head>
 <body class="tb-app">
 <div class="tool-header">
@@ -33,7 +33,7 @@
 <main>
   <!-- ================= 打包 ================= -->
   <section id="page-pack" class="page active">
-    <div class="card">
+    <div class="card tb-theme-panel">
       <h2>打包來源與範圍</h2>
       <div class="row">
         <label>來源根目錄</label>
@@ -62,7 +62,7 @@
       </div>
     </div>
 
-    <div class="card">
+    <div class="card tb-theme-panel">
       <h2>輸出</h2>
       <div class="row">
         <label>輸出資料夾</label>
@@ -82,7 +82,7 @@
 
   <!-- ================= 解壓 ================= -->
   <section id="page-unpack" class="page">
-    <div class="card">
+    <div class="card tb-theme-panel">
       <h2>壓縮包</h2>
       <div class="row">
         <input id="unp-zip" type="text" placeholder="zip 完整路徑" spellcheck="false">
@@ -91,7 +91,7 @@
       </div>
       <div id="unp-info" class="out" hidden></div>
     </div>
-    <div class="card">
+    <div class="card tb-theme-panel">
       <h2>還原目標</h2>
       <div class="row">
         <label>目標根目錄</label>
@@ -111,7 +111,7 @@
 
   <!-- ================= 部署複製 ================= -->
   <section id="page-copy" class="page">
-    <div class="card">
+    <div class="card tb-theme-panel">
       <h2>部署複製（目錄 → 目錄，只新增／覆蓋，不刪除）</h2>
       <div class="row">
         <label>來源根目錄</label>
@@ -135,7 +135,7 @@
 
   <!-- ================= 設定檔 ================= -->
   <section id="page-profiles" class="page">
-    <div class="card">
+    <div class="card tb-theme-panel">
       <h2>已儲存的設定檔（profiles\*.json）</h2>
       <div class="row inline">
         <button id="pf-refresh" class="ghost"><i data-tb-icon="refresh-cw" data-anim="spin"></i>重新整理</button>
@@ -150,7 +150,7 @@
 
   <!-- ================= 歷史 ================= -->
   <section id="page-history" class="page">
-    <div class="card">
+    <div class="card tb-theme-panel">
       <h2>工作歷史（最近 100 筆）</h2>
       <div class="row inline">
         <button id="his-refresh" class="ghost"><i data-tb-icon="refresh-cw" data-anim="spin"></i>重新整理</button>

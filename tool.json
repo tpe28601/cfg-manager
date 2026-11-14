@@ -11,5 +11,5 @@
   "cli": { "entry": "Agents-Cfg-Manager.ps1", "menu": true, "json": false },
   "requires": [],
   "dataDir": "%LOCALAPPDATA%/DevToolbox/agents-cfg-manager",
-  "uiKit": "3.2.0"
+  "uiKit": "3.4.0"
 }
