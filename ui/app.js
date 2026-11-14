@@ -32,12 +32,60 @@ let toastTimer = null;
 function toast(msg, isError) {
   const t = $('#toast');
   t.textContent = msg;
-  t.classList.toggle('err', !!isError);
+  t.classList.toggle('tb-toast--danger', !!isError);
+  t.classList.toggle('tb-toast--ok', !isError);
   t.hidden = false;
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => { t.hidden = true; }, isError ? 6000 : 3000);
 }
 function show(el, text) { el.hidden = false; el.textContent = text; }
+
+function openActionDialog(title, options = {}) {
+  const dialog = $('#action-dialog');
+  const message = $('#action-message');
+  const field = $('#action-field');
+  const input = $('#action-input');
+  const accept = $('#action-accept');
+  const hasInput = Boolean(options.label);
+  $('#action-title').textContent = title;
+  message.textContent = options.message || '';
+  message.hidden = !options.message;
+  if (options.message) dialog.setAttribute('aria-describedby', message.id);
+  else dialog.removeAttribute('aria-describedby');
+  field.hidden = !hasInput;
+  $('#action-label').textContent = options.label || '';
+  input.disabled = !hasInput;
+  input.required = hasInput && !options.readOnly;
+  input.readOnly = Boolean(options.readOnly);
+  input.value = options.value || '';
+  accept.hidden = Boolean(options.readOnly);
+  accept.disabled = Boolean(options.readOnly);
+  accept.textContent = options.accept || '確認';
+  accept.className = 'tb-btn ' + (options.danger ? 'tb-btn--danger' : 'tb-btn--primary');
+  $('#action-cancel').textContent = options.readOnly ? '關閉' : '取消';
+  return new Promise(resolve => {
+    const listeners = new AbortController();
+    function finish(value) {
+      listeners.abort();
+      dialog.close();
+      resolve(value);
+    }
+    dialog.addEventListener('submit', event => {
+      event.preventDefault();
+      const accepted = event.submitter === accept && !accept.disabled;
+      finish(accepted ? (hasInput ? input.value.trim() : true) : null);
+    }, { signal: listeners.signal });
+    dialog.addEventListener('cancel', event => {
+      event.preventDefault();
+      finish(null);
+    }, { signal: listeners.signal });
+    dialog.showModal();
+    if (hasInput) {
+      input.focus();
+      if (options.readOnly) input.select();
+    }
+  });
+}
 
 function fmtBytes(b) {
   if (b === null || b === undefined) return '-';
@@ -62,7 +110,10 @@ function debounce(fn, ms) { let t = null; return (...a) => { clearTimeout(t); t 
 
 // ---------------- Tabs ----------------
 $$('#tabs .tb-tab').forEach(btn => btn.addEventListener('click', () => {
-  $$('#tabs .tb-tab').forEach(b => b.classList.toggle('is-active', b === btn));
+  $$('#tabs .tb-tab').forEach(b => {
+    b.classList.toggle('is-active', b === btn);
+    b.setAttribute('aria-pressed', String(b === btn));
+  });
   $$('.page').forEach(p => p.classList.remove('active'));
   $('#page-' + btn.dataset.tab).classList.add('active');
   if (btn.dataset.tab === 'profiles') loadProfiles();
@@ -73,24 +124,36 @@ $$('#tabs .tb-tab').forEach(btn => btn.addEventListener('click', () => {
 function renderScope() {
   const tb = $('#scope-table tbody');
   tb.innerHTML = '';
+  if (!state.items.length) {
+    tb.innerHTML = '<tr><td colspan="4" class="ac-empty">尚未加入項目。可載入內建範圍，或從下方新增。</td></tr>';
+  }
   state.items.forEach((it, idx) => {
     const tr = document.createElement('tr');
 
     const tdUse = document.createElement('td');
     const cb = document.createElement('input');
     cb.type = 'checkbox'; cb.checked = it.enabled;
-    cb.addEventListener('change', () => { it.enabled = cb.checked; saveLast(); });
+    cb.setAttribute('aria-label', '啟用項目 ' + (idx + 1));
+    cb.addEventListener('change', () => {
+      it.enabled = cb.checked;
+      tr.classList.toggle('off', !cb.checked);
+      saveLast();
+    });
     tdUse.appendChild(cb);
 
     const tdPath = document.createElement('td');
     const inp = document.createElement('input');
     inp.type = 'text'; inp.value = it.path; inp.spellcheck = false;
+    inp.className = 'tb-input tb-input--mono';
+    inp.setAttribute('aria-label', '項目 ' + (idx + 1) + ' 的相對路徑');
     inp.addEventListener('change', () => { it.path = inp.value.trim(); saveLast(); });
     tdPath.appendChild(inp);
 
     const tdEx = document.createElement('td');
     const ex = document.createElement('input');
     ex.type = 'text'; ex.value = (it.exclude || []).join(', ');
+    ex.className = 'tb-input tb-input--mono';
+    ex.setAttribute('aria-label', '項目 ' + (idx + 1) + ' 的排除樣式');
     ex.placeholder = '*.log, *.tmp';
     ex.addEventListener('change', () => {
       it.exclude = ex.value.split(',').map(s => s.trim()).filter(Boolean);
@@ -100,7 +163,8 @@ function renderScope() {
 
     const tdDel = document.createElement('td');
     const del = document.createElement('button');
-    del.className = 'danger tiny'; del.textContent = '刪除';
+    del.type = 'button'; del.className = 'tb-btn tb-btn--danger tb-btn--sm'; del.textContent = '刪除';
+    del.setAttribute('aria-label', '刪除項目 ' + (idx + 1));
     del.addEventListener('click', () => { state.items.splice(idx, 1); renderScope(); saveLast(); });
     tdDel.appendChild(del);
 
@@ -177,7 +241,7 @@ $('#pack-dry').addEventListener('click', async () => {
 });
 
 $('#pack-run').addEventListener('click', async () => {
-  if (!confirm('確認執行打包？')) return;
+  if (!await openActionDialog('執行打包', { accept: '打包' })) return;
   try {
     const r = await post('/api/pack', packBody(false));
     show($('#pack-out'), '完成!\n輸出: ' + r.zip + '\n檔案數: ' + r.count +
@@ -191,7 +255,7 @@ $('#pack-save').addEventListener('click', () => saveProfileAs());
 
 // ---------------- Profiles ----------------
 async function saveProfileAs() {
-  const name = prompt('設定檔名稱（例: PlatformA專案標準包）');
+  const name = await openActionDialog('儲存設定檔', { label: '設定檔名稱', accept: '儲存' });
   if (!name) return;
   try {
     await post('/api/profiles/save', { name, data: currentScopeData() });
@@ -206,7 +270,7 @@ async function loadProfiles() {
     const tb = $('#pf-table tbody');
     tb.innerHTML = '';
     if (!r.profiles.length) {
-      tb.innerHTML = '<tr><td colspan="5" class="hint">尚無設定檔。在「打包」頁按下「儲存目前條件為設定檔…」即可建立。</td></tr>';
+      tb.innerHTML = '<tr><td colspan="5" class="ac-empty">尚無設定檔。可儲存目前的打包條件。</td></tr>';
       return;
     }
     r.profiles.forEach(pf => {
@@ -217,7 +281,8 @@ async function loadProfiles() {
       const tdC = document.createElement('td');
       tdC.textContent = pf.data && pf.data.items ? pf.data.items.length + ' 項' : '';
       const tdA = document.createElement('td');
-      const ld = document.createElement('button'); ld.className = 'tiny'; ld.textContent = '載入';
+      const actions = document.createElement('div'); actions.className = 'ac-cell-actions';
+      const ld = document.createElement('button'); ld.className = 'tb-btn tb-btn--sm'; ld.textContent = '載入';
       ld.addEventListener('click', async () => {
         try {
           const rr = await post('/api/profiles/load', { name: pf.name });
@@ -225,13 +290,14 @@ async function loadProfiles() {
           toast('已載入設定檔: ' + pf.name);
         } catch (e) { toast(e.message, true); }
       });
-      const dl = document.createElement('button'); dl.className = 'danger tiny'; dl.textContent = '刪除';
+      const dl = document.createElement('button'); dl.className = 'tb-btn tb-btn--danger tb-btn--sm'; dl.textContent = '刪除';
       dl.addEventListener('click', async () => {
-        if (!confirm('刪除設定檔 ' + pf.name + ' ?')) return;
+        if (!await openActionDialog('刪除設定檔', { message: pf.name, accept: '刪除', danger: true })) return;
         try { await post('/api/profiles/delete', { name: pf.name }); loadProfiles(); }
         catch (e) { toast(e.message, true); }
       });
-      tdA.append(ld, ' ', dl);
+      actions.append(ld, dl);
+      tdA.appendChild(actions);
       tr.append(tdN, tdU, tdS, tdC, tdA);
       tb.appendChild(tr);
     });
@@ -296,7 +362,10 @@ $('#unp-dry').addEventListener('click', async () => {
 });
 
 $('#unp-run').addEventListener('click', async () => {
-  if (!confirm('確認執行解壓？既有檔案會先備份到目標下 _backup\\')) return;
+  if (!await openActionDialog('執行解壓', {
+    message: $('#unp-nobackup').checked ? '既有檔案會直接覆蓋。' : '既有檔案會先備份到目標目錄的 _backup 資料夾。',
+    accept: '解壓'
+  })) return;
   try {
     const r = await post('/api/unpack', unpackBody(false));
     show($('#unp-out'), '完成!\n寫入 ' + r.count + ' 檔 → ' + r.targetRoot +
@@ -328,7 +397,7 @@ $('#cpy-dry').addEventListener('click', async () => {
   } catch (e) { toast(e.message, true); }
 });
 $('#cpy-run').addEventListener('click', async () => {
-  if (!confirm('確認執行部署複製？')) return;
+  if (!await openActionDialog('執行部署複製', { accept: '複製' })) return;
   try {
     const r = await post('/api/copy', copyBody(false));
     show($('#cpy-out'), '完成!\n寫入 ' + r.count + ' 檔 → ' + r.targetRoot +
@@ -343,25 +412,31 @@ async function loadHistory() {
     const r = await api('/api/history');
     const tb = $('#his-table tbody');
     tb.innerHTML = '';
-    if (!r.entries.length) { tb.innerHTML = '<tr><td colspan="7" class="hint">尚無紀錄</td></tr>'; return; }
+    if (!r.entries.length) { tb.innerHTML = '<tr><td colspan="7" class="ac-empty">尚無紀錄</td></tr>'; return; }
     r.entries.forEach(e => {
       const tr = document.createElement('tr');
       const cells = [e.time, e.action, e.detail || '', e.count, fmtBytes(e.bytes), (e.source || '') + ' → ' + (e.target || '')];
       cells.forEach(v => { const td = document.createElement('td'); td.textContent = v; tr.appendChild(td); });
       const tdA = document.createElement('td');
+      const actions = document.createElement('div'); actions.className = 'ac-cell-actions';
       if (e.cli) {
-        const cp = document.createElement('button'); cp.className = 'ghost tiny'; cp.textContent = '複製指令';
-        cp.addEventListener('click', () => {
-          navigator.clipboard.writeText(e.cli).then(() => toast('已複製 CLI 指令')).catch(() => prompt('手動複製:', e.cli));
+        const cp = document.createElement('button'); cp.className = 'tb-btn tb-btn--sm'; cp.textContent = '複製指令';
+        cp.addEventListener('click', async () => {
+          try {
+            await navigator.clipboard.writeText(e.cli);
+            toast('已複製 CLI 指令');
+          } catch {
+            await openActionDialog('複製 CLI 指令', { label: '指令', value: e.cli, readOnly: true });
+          }
         });
-        tdA.appendChild(cp);
+        actions.appendChild(cp);
       }
-      const del = document.createElement('button'); del.className = 'danger tiny'; del.textContent = '刪除';
-      del.style.marginLeft = '4px';
+      const del = document.createElement('button'); del.className = 'tb-btn tb-btn--danger tb-btn--sm'; del.textContent = '刪除';
       del.addEventListener('click', async () => {
         try { await post('/api/history/delete', { id: e.id }); loadHistory(); } catch (er) { toast(er.message, true); }
       });
-      tdA.appendChild(del);
+      actions.appendChild(del);
+      tdA.appendChild(actions);
       tr.appendChild(tdA);
       if (e.status && e.status !== 'ok') tr.classList.add('off');
       tb.appendChild(tr);
@@ -370,7 +445,7 @@ async function loadHistory() {
 }
 $('#his-refresh').addEventListener('click', loadHistory);
 $('#his-clear').addEventListener('click', async () => {
-  if (!confirm('清空全部工作歷史？')) return;
+  if (!await openActionDialog('清空全部工作歷史', { accept: '清空', danger: true })) return;
   try { await post('/api/history/clear', {}); loadHistory(); } catch (e) { toast(e.message, true); }
 });
 
