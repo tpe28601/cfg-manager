@@ -11,7 +11,7 @@ if (-not ('System.IO.Compression.ZipArchiveMode' -as [type])) {
     Add-Type -AssemblyName System.IO.Compression -ErrorAction SilentlyContinue
 }
 
-$script:OcfToolVersion = '1.2.3'
+$script:OcfToolVersion = '1.2.4'
 $script:OcfPrefix      = 'files/'
 $script:OcfRoot        = $PSScriptRoot
 
