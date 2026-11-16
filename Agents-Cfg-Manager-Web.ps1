@@ -207,8 +207,12 @@ function Invoke-OcfRoute {
     # ---- API ----
     switch ("$method $path") {
         'POST /api/standalone-update' {
-            if ($ParentPid -gt 0) { Send-OcfError $Ctx 403 '請從 Hub 更新工具。' 'MANAGED_BY_HUB'; return }
             $body = Read-OcfBody $Ctx
+            if ($ParentPid -gt 0) {
+                # 由 Hub 啟動：檢查時回報「由 Hub 管理、沒有獨立更新」，不回 403 以免瀏覽器記錄錯誤；開啟更新仍拒絕
+                if ($body.action -eq 'check') { Send-OcfJson $Ctx 200 @{ ok = $true; update = $null; managed = $true }; return }
+                Send-OcfError $Ctx 403 '請從 Hub 更新工具。' 'MANAGED_BY_HUB'; return
+            }
             $updater = Join-Path $PSScriptRoot 'Standalone-Update.ps1'
             if ($body.action -eq 'check') {
                 $result = & $updater -Action Check | ConvertFrom-Json
